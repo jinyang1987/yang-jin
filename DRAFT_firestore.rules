@@ -1,0 +1,97 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() { return request.auth != null; }
+    function isVerified() { return isSignedIn() && request.auth.token.email_verified == true; }
+    function getUserData() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function isAdmin() { return isVerified() && getUserData().role == 'admin'; }
+    function isManager() { return isVerified() && getUserData().role == 'manager'; }
+    function isStaff() { return isVerified() && getUserData().role == 'staff'; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // --- Validation Blueprints ---
+    function isValidCategory(data) {
+      return data.keys().hasAll(['name', 'icon', 'fields']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.icon is string && data.icon.size() <= 50 &&
+             data.fields is list && data.fields.size() > 0 && data.fields.size() <= 100;
+    }
+
+    function isValidInstance(data) {
+      return data.keys().hasAll(['categoryId', 'data', 'status', 'createdBy', 'createdAt', 'updatedAt', 'department']) &&
+             isValidId(data.categoryId) &&
+             data.data is map &&
+             data.status in ['draft', 'pending', 'approved', 'rejected', 'archived'] &&
+             data.createdBy == request.auth.uid &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp &&
+             data.department is string && data.department.size() <= 50;
+    }
+
+    // --- Collection Routes ---
+
+    // 1. Categories (Metadata Design-time)
+    match /categories/{categoryId} {
+      allow read: if isSignedIn();
+      allow create: if isAdmin() && isValidCategory(incoming()) && isValidId(categoryId);
+      allow update: if isAdmin() && isValidCategory(incoming());
+      allow delete: if isAdmin();
+    }
+
+    // 2. Resources (Runtime data)
+    match /resources/{resourceId} {
+      // Secure List Query: Must filter by department or be an admin
+      allow list: if isVerified() && (isAdmin() || resource.data.department == getUserData().department);
+      
+      allow get: if isVerified() && (isAdmin() || resource.data.department == getUserData().department);
+      
+      allow create: if isVerified() && isValidInstance(incoming()) && 
+                        incoming().createdAt == request.time &&
+                        incoming().updatedAt == request.time &&
+                        incoming().department == getUserData().department &&
+                        exists(/databases/$(database)/documents/categories/$(incoming().categoryId));
+
+      allow update: if isVerified() && (
+        isAdmin() || 
+        (
+          existing().department == getUserData().department &&
+          incoming().department == existing().department &&
+          incoming().createdBy == existing().createdBy &&
+          incoming().createdAt == existing().createdAt &&
+          incoming().updatedAt == request.time &&
+          (
+            // Action: Edit Data (Draft/Pending only)
+            (existing().status in ['draft', 'pending'] && incoming().diff(existing()).affectedKeys().hasOnly(['data', 'updatedAt'])) ||
+            // Action: Submit for approval
+            (existing().status == 'draft' && incoming().status == 'pending' && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt'])) ||
+            // Action: Approve/Reject (Manager only)
+            (isManager() && incoming().status in ['approved', 'rejected'] && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']))
+          )
+        )
+      );
+
+      allow delete: if isAdmin();
+    }
+
+    // 3. User Profiles
+    match /users/{userId} {
+      allow read: if isVerified() && (request.auth.uid == userId || isAdmin());
+      allow create: if isVerified() && request.auth.uid == userId && 
+                       incoming().keys().hasAll(['name', 'role', 'department']) &&
+                       incoming().role == 'staff' && // Users cannot self-assign higher roles
+                       incoming().department is string;
+      allow update: if isVerified() && request.auth.uid == userId && 
+                       incoming().diff(existing()).affectedKeys().hasOnly(['name', 'department']) &&
+                       incoming().role == existing().role; // Cannot change own role
+      allow update: if isAdmin();
+    }
+  }
+}

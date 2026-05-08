@@ -1,0 +1,89 @@
+{
+  "entities": {
+    "category": {
+      "title": "Resource Category Metadata",
+      "description": "Defines the structure and behavior of a specific resource type",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "icon": { "type": "string" },
+        "description": { "type": "string" },
+        "fields": { "type": "array" },
+        "workflow": { "type": "object" },
+        "watermarkConfig": { "type": "object" }
+      },
+      "required": ["name", "icon", "fields"]
+    },
+    "instance": {
+      "title": "Resource Record",
+      "description": "An actual instance of a resource (e.g. a specific bid document)",
+      "type": "object",
+      "properties": {
+        "categoryId": { "type": "string" },
+        "data": { "type": "object" },
+        "status": { "type": "string" },
+        "isDeleted": { "type": "boolean" },
+        "deletedAt": { "type": "number" },
+        "versions": { "type": "array" },
+        "createdBy": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["categoryId", "data", "status", "createdBy"]
+    },
+    "archive": {
+      "title": "Archive Record",
+      "description": "Physical archive asset",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "title": { "type": "string" },
+        "type": { "type": "string" },
+        "status": { "type": "string" },
+        "department": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["code", "title", "status", "department", "createdAt"]
+    },
+    "application": {
+      "title": "Workflow Application",
+      "description": "Approval request for printing or physical reservation",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string" },
+        "applicantId": { "type": "string" },
+        "applicantName": { "type": "string" },
+        "department": { "type": "string" },
+        "targetResources": { "type": "array" },
+        "targetArchives": { "type": "array" },
+        "purpose": { "type": "string" },
+        "status": { "type": "string" },
+        "approvalNodes": { "type": "array" },
+        "details": { "type": "object" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["type", "applicantId", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/categories/{categoryId}": {
+      "schema": "category",
+      "description": "Resource type definitions (Config state)"
+    },
+    "/resources/{resourceId}": {
+      "schema": "instance",
+      "description": "Actual resource data (Runtime state)"
+    },
+    "/archives/{archiveId}": {
+      "schema": "archive",
+      "description": "Physical archive asset collection"
+    },
+    "/applications/{applicationId}": {
+      "schema": "application",
+      "description": "Approval workflow requests"
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "user" },
+      "description": "User profiles and permissions"
+    }
+  }
+}

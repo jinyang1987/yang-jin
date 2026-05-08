@@ -1,0 +1,80 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() { return request.auth != null; }
+    
+    function isSuperAdmin() {
+      return isSignedIn() && 
+             request.auth.token.email == 'jinlinrun198x@gmail.com' && 
+             request.auth.token.email_verified == true;
+    }
+
+    function getUserData() { 
+      let path = /databases/$(database)/documents/users/$(request.auth.uid);
+      return exists(path) ? get(path).data : {"role": "user", "department": "standard"};
+    }
+
+    function isAdmin() { 
+      return isSuperAdmin() || (isSignedIn() && getUserData().role == 'admin');
+    }
+
+    function isHandler() {
+      return isAdmin() || (isSignedIn() && getUserData().role == 'handler');
+    }
+
+    function isStandardUser() {
+      return isSignedIn() && (getUserData().role == 'user' || isHandler());
+    }
+
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    function isValidCategory(data) {
+      return data.keys().hasAll(['name', 'icon', 'fields']) &&
+             data.name is string && data.name.size() > 0 && 
+             data.icon is string &&
+             data.fields is list;
+    }
+
+    match /categories/{categoryId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /resources/{resourceId} {
+      allow read: if isSignedIn();
+      allow create: if isHandler();
+      allow update: if isAdmin() || (isHandler() && existing().createdBy == request.auth.uid);
+      allow delete: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+    }
+
+    match /archives/{archiveId} {
+      allow read: if isAdmin() || isHandler();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /applications/{applicationId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.applicantId == request.auth.uid);
+      allow create: if isHandler();
+      allow update: if isAdmin() || (isSignedIn() && existing().applicantId == request.auth.uid && existing().status == 'pending');
+      allow delete: if isAdmin();
+    }
+    match /roles/{roleId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+  }
+}
