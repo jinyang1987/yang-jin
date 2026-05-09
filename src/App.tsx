@@ -19,11 +19,13 @@ import ArchiveManager from './components/admin/ArchiveManager';
 import ProjectManager from './components/admin/ProjectManager';
 import ApprovalEngine from './components/admin/ApprovalEngine';
 import RoleManagement from './components/admin/RoleManagement';
+import OrgManagement from './components/admin/OrgManagement';
+import StaffManagement from './components/admin/StaffManagement';
 import VersionHistoryModal from './components/VersionHistoryModal';
 import BulkImportModal from './components/BulkImportModal';
 import { MOCK_CATEGORIES, MOCK_RESOURCES } from './constants';
 import { ResourceCategory, ResourceInstance } from './types';
-import { Plus, Filter, Search, ChevronRight, ArrowLeft, LogIn, Loader2, FileText, Trash2, Upload } from 'lucide-react';
+import { Plus, Filter, Search, ChevronRight, ArrowLeft, LogIn, Loader2, FileText, Trash2, Upload, Settings, Shield, Network, Users as UsersIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { firestoreService } from './services/firestoreService';
@@ -610,6 +612,107 @@ function MainApp() {
             </motion.div>
           )}
 
+          {activeTab === 'system' && (
+            <motion.div
+              key="system"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-8"
+            >
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-1">系统设置与管理</h1>
+                <p className="text-sm text-slate-500 font-medium font-sans">全局参数配置、业务模型定义以及安全权限控制中心。</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <button
+                  onClick={() => setActiveTab('designer')}
+                  className="group relative bg-white p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-200 transition-all text-left overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                    <Settings size={120} />
+                  </div>
+                  <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                    <Settings size={28} />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition-colors">模型设计器</h3>
+                  <p className="text-sm text-slate-500 leading-relaxed">
+                    定义资源架构、层级关系及动态审批表单，构建业务数据蓝图。
+                  </p>
+                  <div className="mt-6 flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transform translate-x-[-10px] group-hover:translate-x-0 transition-all">
+                    立即进入 <ChevronRight size={14} />
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('rbac')}
+                  className="group relative bg-white p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-indigo-500/10 hover:border-indigo-200 transition-all text-left overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                    <Shield size={120} />
+                  </div>
+                  <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                    <Shield size={28} />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-indigo-600 transition-colors">权限引擎</h3>
+                  <p className="text-sm text-slate-500 leading-relaxed">
+                    精细化角色权限矩阵、用户职能分配及数据访问隔离策略。
+                  </p>
+                  <div className="mt-6 flex items-center gap-2 text-indigo-600 font-bold text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transform translate-x-[-10px] group-hover:translate-x-0 transition-all">
+                    立即进入 <ChevronRight size={14} />
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('org')}
+                  className="group relative bg-white p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-emerald-500/10 hover:border-emerald-200 transition-all text-left overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                    <Network size={120} />
+                  </div>
+                  <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                    <Network size={28} />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">组织架构</h3>
+                  <p className="text-sm text-slate-500 leading-relaxed">
+                    定义机构树、部门层级及隶属关系，映射企业实体运作逻辑。
+                  </p>
+                  <div className="mt-6 flex items-center gap-2 text-emerald-600 font-bold text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transform translate-x-[-10px] group-hover:translate-x-0 transition-all">
+                    立即进入 <ChevronRight size={14} />
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('staff')}
+                  className="group relative bg-white p-8 rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-amber-500/10 hover:border-amber-200 transition-all text-left overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 p-4 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                    <UsersIcon size={120} />
+                  </div>
+                  <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                    <UsersIcon size={28} />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 mb-2 group-hover:text-amber-600 transition-colors">人员管理</h3>
+                  <p className="text-sm text-slate-500 leading-relaxed">
+                    维护员工档案、账号状态、岗位置换及入离职全生命周期。
+                  </p>
+                  <div className="mt-6 flex items-center gap-2 text-amber-600 font-bold text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transform translate-x-[-10px] group-hover:translate-x-0 transition-all">
+                    立即进入 <ChevronRight size={14} />
+                  </div>
+                </button>
+
+                <div className="bg-slate-50/50 p-8 rounded-2xl border border-dashed border-slate-200 flex flex-col items-center justify-center text-center">
+                  <div className="w-12 h-12 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mb-4">
+                    <Plus size={20} />
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest">更多模块</h3>
+                  <p className="text-xs text-slate-400 mt-2">更多管理工具正在接入中...</p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {activeTab === 'designer' && (
             <motion.div
               key="designer"
@@ -654,6 +757,42 @@ function MainApp() {
               </div>
 
               <RoleManagement />
+            </motion.div>
+          )}
+          
+          {activeTab === 'org' && (
+            <motion.div
+              key="org"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-8"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-1">组织架构管理</h1>
+                  <p className="text-sm text-slate-500 font-medium font-sans">设计和维护企业的法律实体、业务部门及班组层级。</p>
+                </div>
+              </div>
+              <OrgManagement />
+            </motion.div>
+          )}
+
+          {activeTab === 'staff' && (
+            <motion.div
+              key="staff"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-8"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-1">全域人员管理</h1>
+                  <p className="text-sm text-slate-500 font-medium font-sans">管理员工账号生命周期、部门归属以及基本人事档案。</p>
+                </div>
+              </div>
+              <StaffManagement />
             </motion.div>
           )}
         </AnimatePresence>

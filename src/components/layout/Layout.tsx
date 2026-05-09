@@ -15,7 +15,9 @@ import {
   FolderOpen,
   ChevronDown,
   Layers,
-  Shield
+  Shield,
+  Network,
+  Users
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ResourceCategory } from '../../types';
@@ -72,6 +74,7 @@ export default function Layout({
   const [collapsed, setCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isResourcesOpen, setIsResourcesOpen] = useState(true);
+  const [isSystemOpen, setIsSystemOpen] = useState(false);
 
   const role = profile?.role || 'user';
 
@@ -82,8 +85,7 @@ export default function Layout({
     { id: 'archives', label: '档案管理', icon: <Archive size={20} />, roles: ['admin', 'handler'] },
     { id: 'projects', label: '项目资料', icon: <FolderOpen size={20} />, roles: ['admin', 'handler'] },
     { id: 'approvals', label: '审批引擎', icon: <ClipboardCheck size={20} />, roles: ['admin'] },
-    { id: 'designer', label: '模型设计', icon: <Settings size={20} />, roles: ['admin'] },
-    { id: 'rbac', label: '权限引擎', icon: <Shield size={20} />, roles: ['admin'] },
+    { id: 'system', label: '系统管理', icon: <Settings size={20} />, hasSubmenu: true, roles: ['admin'] },
   ].filter(item => item.roles.includes(role));
 
   return (
@@ -125,11 +127,14 @@ export default function Layout({
                   if (item.id === 'resources') {
                     setIsResourcesOpen(!isResourcesOpen);
                   }
+                  if (item.id === 'system') {
+                    setIsSystemOpen(!isSystemOpen);
+                  }
                   onTabChange(item.id);
                 }}
                 collapsed={collapsed}
                 hasSubmenu={item.hasSubmenu}
-                isSubmenuOpen={isResourcesOpen}
+                isSubmenuOpen={item.id === 'resources' ? isResourcesOpen : (item.id === 'system' ? isSystemOpen : false)}
               />
               
               {item.id === 'resources' && isResourcesOpen && !collapsed && (
@@ -154,6 +159,55 @@ export default function Layout({
                   {categories.length === 0 && (
                     <p className="px-4 py-2 text-[10px] text-slate-600 italic">尚未配置分类</p>
                   )}
+                </div>
+              )}
+
+              {item.id === 'system' && isSystemOpen && !collapsed && (
+                <div className="ml-6 space-y-1 mt-1 border-l border-slate-800">
+                  <button
+                    onClick={() => onTabChange('designer')}
+                    className={`w-full flex items-center gap-3 px-4 py-1.5 rounded-r-lg transition-all duration-200 text-xs font-bold uppercase tracking-wider ${
+                      activeTab === 'designer'
+                        ? 'text-blue-500 bg-blue-500/10 border-l-2 border-blue-500'
+                        : 'text-slate-500 hover:text-slate-200 hover:bg-slate-800'
+                    }`}
+                  >
+                    <Settings size={14} className="shrink-0" />
+                    <span className="truncate">模型设计</span>
+                  </button>
+                  <button
+                    onClick={() => onTabChange('rbac')}
+                    className={`w-full flex items-center gap-3 px-4 py-1.5 rounded-r-lg transition-all duration-200 text-xs font-bold uppercase tracking-wider ${
+                      activeTab === 'rbac'
+                        ? 'text-blue-500 bg-blue-500/10 border-l-2 border-blue-500'
+                        : 'text-slate-500 hover:text-slate-200 hover:bg-slate-800'
+                    }`}
+                  >
+                    <Shield size={14} className="shrink-0" />
+                    <span className="truncate">权限引擎</span>
+                  </button>
+                  <button
+                    onClick={() => onTabChange('org')}
+                    className={`w-full flex items-center gap-3 px-4 py-1.5 rounded-r-lg transition-all duration-200 text-xs font-bold uppercase tracking-wider ${
+                      activeTab === 'org'
+                        ? 'text-blue-500 bg-blue-500/10 border-l-2 border-blue-500'
+                        : 'text-slate-500 hover:text-slate-200 hover:bg-slate-800'
+                    }`}
+                  >
+                    <Network size={14} className="shrink-0" />
+                    <span className="truncate">组织架构</span>
+                  </button>
+                  <button
+                    onClick={() => onTabChange('staff')}
+                    className={`w-full flex items-center gap-3 px-4 py-1.5 rounded-r-lg transition-all duration-200 text-xs font-bold uppercase tracking-wider ${
+                      activeTab === 'staff'
+                        ? 'text-blue-500 bg-blue-500/10 border-l-2 border-blue-500'
+                        : 'text-slate-500 hover:text-slate-200 hover:bg-slate-800'
+                    }`}
+                  >
+                    <Users size={14} className="shrink-0" />
+                    <span className="truncate">人员管理</span>
+                  </button>
                 </div>
               )}
             </div>
@@ -278,13 +332,15 @@ export default function Layout({
                       onClick={() => {
                         if (item.id === 'resources') {
                           setIsResourcesOpen(!isResourcesOpen);
+                        } else if (item.id === 'system') {
+                          setIsSystemOpen(!isSystemOpen);
                         } else {
                           onTabChange(item.id);
                           setIsMobileMenuOpen(false);
                         }
                       }}
                       hasSubmenu={item.hasSubmenu}
-                      isSubmenuOpen={isResourcesOpen}
+                      isSubmenuOpen={item.id === 'resources' ? isResourcesOpen : (item.id === 'system' ? isSystemOpen : false)}
                     />
                     {item.id === 'resources' && isResourcesOpen && (
                       <div className="ml-6 space-y-1 mt-1 border-l border-slate-800">
@@ -306,6 +362,58 @@ export default function Layout({
                             <span className="truncate">{cat.name}</span>
                           </button>
                         ))}
+                      </div>
+                    )}
+                    {item.id === 'system' && isSystemOpen && (
+                      <div className="ml-6 space-y-1 mt-1 border-l border-slate-800">
+                        <button
+                          onClick={() => {
+                            onTabChange('designer');
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-3 px-4 py-2 rounded-r-lg transition-all duration-200 text-xs font-bold uppercase tracking-wider ${
+                            activeTab === 'designer' ? 'text-blue-500 bg-blue-500/10' : 'text-slate-500'
+                          }`}
+                        >
+                          <Settings size={14} className="shrink-0" />
+                          <span className="truncate">模型设计</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            onTabChange('rbac');
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-3 px-4 py-2 rounded-r-lg transition-all duration-200 text-xs font-bold uppercase tracking-wider ${
+                            activeTab === 'rbac' ? 'text-blue-500 bg-blue-500/10' : 'text-slate-500'
+                          }`}
+                        >
+                          <Shield size={14} className="shrink-0" />
+                          <span className="truncate">权限引擎</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            onTabChange('org');
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-3 px-4 py-2 rounded-r-lg transition-all duration-200 text-xs font-bold uppercase tracking-wider ${
+                            activeTab === 'org' ? 'text-blue-500 bg-blue-500/10' : 'text-slate-500'
+                          }`}
+                        >
+                          <Network size={14} className="shrink-0" />
+                          <span className="truncate">组织架构</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            onTabChange('staff');
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-3 px-4 py-2 rounded-r-lg transition-all duration-200 text-xs font-bold uppercase tracking-wider ${
+                            activeTab === 'staff' ? 'text-blue-500 bg-blue-500/10' : 'text-slate-500'
+                          }`}
+                        >
+                          <Users size={14} className="shrink-0" />
+                          <span className="truncate">人员管理</span>
+                        </button>
                       </div>
                     )}
                   </div>
