@@ -233,36 +233,6 @@ function MainApp() {
     );
   }
 
-  if (!user) {
-    return (
-      <div className="h-screen bg-slate-50 flex items-center justify-center p-6 text-slate-900">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="max-w-md w-full bg-white border border-slate-200 rounded-3xl p-10 shadow-2xl text-center"
-        >
-          <div className="w-20 h-20 bg-blue-600 rounded-2xl mx-auto flex items-center justify-center mb-8 shadow-lg shadow-blue-500/20">
-             <span className="text-4xl font-bold italic text-white">XL</span>
-          </div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2 tracking-tight">小鹿灵动资管</h1>
-          <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mb-10">Meta-Driven Resource Management System</p>
-          
-          <button 
-            onClick={login}
-            className="w-full flex items-center justify-center gap-3 bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-slate-900/10"
-          >
-            <LogIn size={20} />
-            使用 Google 账号登录
-          </button>
-          
-          <p className="mt-8 text-[11px] text-slate-400 font-bold uppercase tracking-widest leading-loose">
-            仅限小鹿内部员工授权访问。系统基于元数据模型驱动。
-          </p>
-        </motion.div>
-      </div>
-    );
-  }
-
   const handleSaveModels = async (updated: ResourceCategory[]) => {
     if (profile?.role !== 'admin') {
       alert('只有管理员可以保存模型配置');

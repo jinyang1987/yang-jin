@@ -21,8 +21,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
-      setUser(authUser);
       if (authUser) {
+        setUser(authUser);
         try {
           const profileRef = doc(db, 'users', authUser.uid);
           const profileSnap = await getDoc(profileRef);
@@ -64,7 +64,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
       } else {
-        setProfile(null);
+        // Mock a default admin user if not logged in
+        setUser({
+          uid: 'mock-admin-id',
+          displayName: '系统管理员',
+          email: 'admin@xiaolu.com'
+        } as any);
+        setProfile({
+          uid: 'mock-admin-id',
+          email: 'admin@xiaolu.com',
+          name: '系统管理员',
+          role: 'admin',
+          department: 'integration',
+          isSuperAdmin: true
+        });
       }
       setLoading(false);
     });
